@@ -72,7 +72,7 @@ func parseImports(f *ast.File) map[string]*commentsMetadata {
 		switch decl.(type) {
 		case *ast.GenDecl:
 			dd := decl.(*ast.GenDecl)
-			if isSingleCgoImport(dd) {
+			if isSingleGoImport(dd) {
 				continue
 			}
 			if dd.Tok == token.IMPORT {
@@ -98,14 +98,14 @@ func parseImports(f *ast.File) map[string]*commentsMetadata {
 	return importsWithMetadata
 }
 
-func isSingleCgoImport(dd *ast.GenDecl) bool {
+func isSingleGoImport(dd *ast.GenDecl) bool {
 	if dd.Tok != token.IMPORT {
 		return false
 	}
 	if len(dd.Specs) != 1 {
 		return false
 	}
-	return dd.Specs[0].(*ast.ImportSpec).Path.Value == `"C"`
+	return true
 }
 
 func groupImports(
@@ -159,10 +159,8 @@ func skipPackageAlias(pkg string) string {
 
 func isPackageWithAlias(pkg string) bool {
 	values := strings.Split(pkg, " ")
-	if len(values) > 1 {
-		return true
-	}
-	return false
+
+	return len(values) > 1
 }
 
 // hasMultipleImportDecls will return combined import declarations to single declaration
@@ -196,7 +194,7 @@ func hasMultipleImportDecls(f *ast.File) ([]ast.Decl, bool) {
 			continue
 		}
 
-		if dd.Tok != token.IMPORT || isSingleCgoImport(dd) {
+		if dd.Tok != token.IMPORT || isSingleGoImport(dd) {
 			decls = append(decls, dd)
 			continue
 		}
@@ -230,7 +228,7 @@ func fixImports(
 			continue
 		}
 
-		if dd.Tok != token.IMPORT || isSingleCgoImport(dd) {
+		if dd.Tok != token.IMPORT {
 			continue
 		}
 
@@ -267,7 +265,7 @@ func rebuildImports(
 
 		linesCounter--
 
-		if linesCounter == 0 && (len(generalImports) > 0 || len(aliasedImports) > 0 || len(projectImports) > 0) {
+		if linesCounter == 0 && (len(aliasedImports) > 0 || len(projectImports) > 0 || len(generalImports) > 0) {
 			spec = &ast.ImportSpec{Path: &ast.BasicLit{Value: "", Kind: token.STRING}}
 
 			specs = append(specs, spec)
@@ -283,40 +281,34 @@ func rebuildImports(
 
 		linesCounter--
 
-		if linesCounter == 0 && (len(generalImports) > 0 || len(aliasedImports) > 0 || len(projectImports) > 0) {
+		if linesCounter == 0 && (len(projectImports) > 0 || len(generalImports) > 0) {
 			spec = &ast.ImportSpec{Path: &ast.BasicLit{Value: "", Kind: token.STRING}}
 
 			specs = append(specs, spec)
 		}
 	}
 
+	linesCounter = len(projectImports)
 	for _, projectImport := range projectImports {
 		spec := &ast.ImportSpec{
 			Path: &ast.BasicLit{Value: importWithComment(projectImport, commentsMetadata), Kind: tok},
 		}
 		specs = append(specs, spec)
 
-		if linesCounter == 0 && (len(generalImports) > 0 || len(aliasedImports) > 0 || len(projectImports) > 0) {
+		linesCounter--
+
+		if linesCounter == 0 && len(generalImports) > 0 {
 			spec = &ast.ImportSpec{Path: &ast.BasicLit{Value: "", Kind: token.STRING}}
 
 			specs = append(specs, spec)
 		}
 	}
 
-	linesCounter = len(generalImports)
 	for _, generalImport := range generalImports {
 		spec := &ast.ImportSpec{
 			Path: &ast.BasicLit{Value: importWithComment(generalImport, commentsMetadata), Kind: tok},
 		}
 		specs = append(specs, spec)
-
-		linesCounter--
-
-		if linesCounter == 0 && (len(generalImports) > 0 || len(aliasedImports) > 0 || len(projectImports) > 0) {
-			spec = &ast.ImportSpec{Path: &ast.BasicLit{Value: "", Kind: token.STRING}}
-
-			specs = append(specs, spec)
-		}
 	}
 
 	return specs
