@@ -139,7 +139,7 @@ func groupImports(
 
 		generalImports = append(generalImports, imprt)
 	}
-	
+
 	sort.Strings(stdImports)
 	sort.Strings(generalImports)
 	sort.Strings(importsWithAlias)
@@ -159,10 +159,8 @@ func skipPackageAlias(pkg string) string {
 
 func isPackageWithAlias(pkg string) bool {
 	values := strings.Split(pkg, " ")
-	if len(values) > 1 {
-		return true
-	}
-	return false
+
+	return len(values) > 1
 }
 
 // hasMultipleImportDecls will return combined import declarations to single declaration
@@ -230,7 +228,7 @@ func fixImports(
 			continue
 		}
 
-		if dd.Tok != token.IMPORT || isSingleGoImport(dd) {
+		if dd.Tok != token.IMPORT {
 			continue
 		}
 
@@ -306,7 +304,6 @@ func rebuildImports(
 		}
 	}
 
-	
 	for _, generalImport := range generalImports {
 		spec := &ast.ImportSpec{
 			Path: &ast.BasicLit{Value: importWithComment(generalImport, commentsMetadata), Kind: tok},
