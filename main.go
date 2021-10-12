@@ -66,8 +66,6 @@ func printUsage() {
 	flag.PrintDefaults()
 }
 
-//@todo find a way to not set path
-
 func main() {
 	flag.Parse()
 
@@ -129,6 +127,7 @@ func main() {
 	}
 
 	RunCommand(projectName, filePath, orderSplitted)
+	os.Exit(0)
 }
 
 func RunCommandRecursive(projectName, path string, order []string) {
@@ -140,7 +139,6 @@ func RunCommandRecursive(projectName, path string, order []string) {
 		}
 
 		if !info.IsDir() && filepath.Ext(path) == ".go" {
-			fmt.Printf("sorting imports from file : %v\n", path)
 			RunCommand(projectName, path, order)
 		}
 
@@ -164,6 +162,8 @@ func RunCommand(projectName, filePath string, orderSplitted []string) {
 		if !hasChange {
 			return
 		}
+
+		fmt.Printf("sorting imports from file : %v\n", filePath)
 
 		if err := ioutil.WriteFile(filePath, formattedOutput, 0644); err != nil {
 			log.Fatalf("failed to write fixed result to file(%s): %+v", filePath, errors.WithStack(err))
