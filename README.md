@@ -18,7 +18,7 @@ Install it by running:
 go install github.com/Project-Centurion/ordino@latest
 ```
 
-Then run :
+ Classic run :
 
 ```shell
 ordino -project-name <YourProjectName> -file-path <PathToYourFile> -output <TheOutPutYouWant> -order <thePackagesOrderYouWant>
@@ -29,3 +29,11 @@ ordino -project-name <YourProjectName> -file-path <PathToYourFile> -output <TheO
 * **TheOutPutYouWant** : (*optional*) either `file` or `stdout`, by default `file` (will rewrite the file specified in `-file-path`).
 * **thePackagesOrderYouWant** : (*optional*) constructed like this `std,alias,project,general` by default, meaning the order you want between 
 the packages, separated by commas, no spaces. Aliased packages being separated are optional.
+
+
+Recursive run :
+
+```shell
+ordino ./...
+```
+

@@ -32,7 +32,7 @@ func init() {
 		&filePath,
 		filePathArg,
 		"",
-		"File path to fix imports(ex.: ./reviser/reviser.go). Required parameter.",
+		"File path to fix imports(ex.: ./dummypkg/dummyfile.go). Required parameter.",
 	)
 
 	flag.StringVar(
@@ -66,6 +66,8 @@ func printUsage() {
 	flag.PrintDefaults()
 }
 
+//@todo find a way to not set path
+
 func main() {
 	flag.Parse()
 
@@ -74,6 +76,16 @@ func main() {
 		if flag.Args()[0] == RecursiveArg {
 			isRecursive = true
 		}
+	}
+
+	if filePath == "" && isRecursive {
+		path, err := os.Getwd()
+		if err != nil {
+			log.Println(err)
+		}
+
+		filePath = path
+
 	}
 
 	if !isRecursive {
@@ -91,7 +103,7 @@ func main() {
 
 	projectName, err := determineProjectName(projectName, filePath)
 	if err != nil {
-		fmt.Printf("%s\n\n", err)
+		fmt.Printf("err : %s\n\n", err)
 		printUsage()
 		os.Exit(1)
 	}
@@ -112,20 +124,16 @@ func main() {
 
 	if isRecursive {
 		output = defaultOutput
-		RunCommandRecursive(projectName, orderSplitted)
+		RunCommandRecursive(projectName, filePath, orderSplitted)
 		os.Exit(0)
 	}
 
 	RunCommand(projectName, filePath, orderSplitted)
 }
 
-func RunCommandRecursive(projectName string, order []string) {
-	path, err := os.Getwd()
-	if err != nil {
-		log.Println(err)
-	}
+func RunCommandRecursive(projectName, path string, order []string) {
 
-	err = filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			fmt.Println(err)
 			return err
@@ -185,13 +193,16 @@ func validateOutputParam(output string) error {
 
 func determineProjectName(projectName, filePath string) (string, error) {
 	if projectName == "" {
+
 		projectRootPath, err := module.GoModRootPath(filePath)
 		if err != nil {
+			fmt.Printf("err: %v, \n", err)
 			return "", err
 		}
 
 		moduleName, err := module.Name(projectRootPath)
 		if err != nil {
+			fmt.Printf("err 2: %v, \n", err)
 			return "", err
 		}
 
