@@ -13,6 +13,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+
 //@todo : add a 5th optional package with a specified path
 
 const (
@@ -30,6 +31,7 @@ const (
 )
 
 var projectName, output, order string
+
 
 func init() {
 
@@ -65,9 +67,11 @@ func printUsage() {
 	fmt.Printf("unamed arg : %s", FilePathUsage)
 }
 
+//@todo find a way to not set path
+
 func main() {
 	flag.Parse()
-
+	
 	args := flag.Args()
 	if len(args) == 0 {
 		fmt.Println(colorError(fmt.Sprintf("No file provided : %s", FilePathUsage)))
@@ -96,6 +100,7 @@ func main() {
 	if !isRecursive {
 		if err := validateSinglePathParam(filePath); err != nil {
 			fmt.Println(colorError(err.Error()))
+
 			os.Exit(1)
 		}
 	}
@@ -169,7 +174,7 @@ func RunCommand(projectName, filePath string, orderSplitted []string) {
 	if err != nil {
 		log.Fatalf(colorError(fmt.Sprintf("%+v", errors.WithStack(err))))
 	}
-
+	
 	if output == StdOutput {
 		fmt.Print(string(formattedOutput))
 	} else if output == defaultOutput {
@@ -218,11 +223,13 @@ func determineProjectName(projectName, filePath string) (string, error) {
 
 		projectRootPath, err := module.GoModRootPath(filePath)
 		if err != nil {
+			fmt.Printf("err: %v, \n", err)
 			return "", err
 		}
 
 		moduleName, err := module.Name(projectRootPath)
 		if err != nil {
+			fmt.Printf("err 2: %v, \n", err)
 			return "", err
 		}
 
