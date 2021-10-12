@@ -22,6 +22,7 @@ const (
 	orderArg       = "order"
 	defaultOutput  = "file"
 	StdOutput      = "stdout"
+	RecursiveArg   = "./..."
 )
 
 var projectName, filePath, output, order string
@@ -68,22 +69,24 @@ func printUsage() {
 func main() {
 	flag.Parse()
 
-	if err := validateRequiredParam(filePath); err != nil {
-		fmt.Printf("%s\n\n", err)
-		printUsage()
-		os.Exit(1)
+	var isRecursive bool
+	if len(flag.Args()) > 0 {
+		if flag.Args()[0] == RecursiveArg {
+			isRecursive = true
+		}
+	}
+
+	if !isRecursive {
+		if err := validateRequiredParam(filePath); err != nil {
+			fmt.Printf("%s\n\n", err)
+			printUsage()
+			os.Exit(1)
+		}
 	}
 
 	if err := validateOutputParam(output); err != nil {
 		fmt.Printf("%s\n\n", err)
 		os.Exit(1)
-	}
-
-	var isRecursive bool
-	if len(flag.Args()) > 0 {
-		if flag.Args()[0] == "./..." {
-			isRecursive = true
-		}
 	}
 
 	projectName, err := determineProjectName(projectName, filePath)
