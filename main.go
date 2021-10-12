@@ -13,8 +13,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-//@todo(athenais): add ./... arg (recusive) (flagArgs?)
-
 const (
 	projectNameArg = "project-name"
 	filePathArg    = "file-path"
@@ -23,6 +21,9 @@ const (
 	defaultOutput  = "file"
 	StdOutput      = "stdout"
 	RecursiveArg   = "./..."
+	ColorGreen     = "\033[32m"
+	ColorRed       = "\033[31m"
+	ColorReset     = "\033[0m"
 )
 
 var projectName, filePath, output, order string
@@ -66,8 +67,6 @@ func printUsage() {
 	flag.PrintDefaults()
 }
 
-//@todo find a way to not set path
-
 func main() {
 	flag.Parse()
 
@@ -81,7 +80,7 @@ func main() {
 	if filePath == "" && isRecursive {
 		path, err := os.Getwd()
 		if err != nil {
-			log.Println(err)
+			fmt.Println(err)
 		}
 
 		filePath = path
@@ -90,20 +89,20 @@ func main() {
 
 	if !isRecursive {
 		if err := validateRequiredParam(filePath); err != nil {
-			fmt.Printf("%s\n\n", err)
+			fmt.Println(colorError(err.Error()))
 			printUsage()
 			os.Exit(1)
 		}
 	}
 
 	if err := validateOutputParam(output); err != nil {
-		fmt.Printf("%s\n\n", err)
+		fmt.Println(colorError(err.Error()))
 		os.Exit(1)
 	}
 
 	projectName, err := determineProjectName(projectName, filePath)
 	if err != nil {
-		fmt.Printf("err : %s\n\n", err)
+		fmt.Println(colorError(err.Error()))
 		printUsage()
 		os.Exit(1)
 	}
@@ -111,13 +110,13 @@ func main() {
 	orderSplitted := strings.Split(order, ",")
 
 	if len(orderSplitted) < 3 {
-		fmt.Printf("not enough arguments for flag order")
+		fmt.Println(colorError("exited: not enough arguments for flag order"))
 		os.Exit(1)
 	}
 
 	for _, order := range orderSplitted {
 		if (order != stdPkg) && (order != aliasedPkg) && (order != projectPkg) && (order != generalPkg) {
-			fmt.Printf("order flag must either be %s, %s, %s, or %s", stdPkg, aliasedPkg, projectPkg, generalPkg)
+			fmt.Println(colorError(fmt.Sprintf("exited: order flag must either be %s, %s, %s, or %s", stdPkg, aliasedPkg, projectPkg, generalPkg)))
 			os.Exit(1)
 		}
 	}
@@ -129,18 +128,26 @@ func main() {
 	}
 
 	RunCommand(projectName, filePath, orderSplitted)
+	os.Exit(0)
+}
+
+func colorError(error string) string {
+	return fmt.Sprintf("%s%s%s", ColorRed, error, ColorReset)
+}
+
+func colorWorked(success string) string {
+	return fmt.Sprintf("%s%s%s", ColorGreen, success, ColorReset)
 }
 
 func RunCommandRecursive(projectName, path string, order []string) {
 
 	err := filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println(colorError(err.Error()))
 			return err
 		}
 
 		if !info.IsDir() && filepath.Ext(path) == ".go" {
-			fmt.Printf("sorting imports from file : %v\n", path)
 			RunCommand(projectName, path, order)
 		}
 
@@ -155,7 +162,7 @@ func RunCommand(projectName, filePath string, orderSplitted []string) {
 
 	formattedOutput, hasChange, err := Execute(projectName, filePath, orderSplitted)
 	if err != nil {
-		log.Fatalf("%+v", errors.WithStack(err))
+		log.Fatalf(colorError(fmt.Sprintf("%+v", errors.WithStack(err))))
 	}
 
 	if output == StdOutput {
@@ -165,8 +172,10 @@ func RunCommand(projectName, filePath string, orderSplitted []string) {
 			return
 		}
 
+		fmt.Println(colorWorked(fmt.Sprintf("	imports sorted: %v", filePath)))
+
 		if err := ioutil.WriteFile(filePath, formattedOutput, 0644); err != nil {
-			log.Fatalf("failed to write fixed result to file(%s): %+v", filePath, errors.WithStack(err))
+			log.Fatalf(colorError(fmt.Sprintf("failed to write fixed result to file(%s): %+v", filePath, errors.WithStack(err))))
 		}
 	}
 
@@ -196,13 +205,11 @@ func determineProjectName(projectName, filePath string) (string, error) {
 
 		projectRootPath, err := module.GoModRootPath(filePath)
 		if err != nil {
-			fmt.Printf("err: %v, \n", err)
 			return "", err
 		}
 
 		moduleName, err := module.Name(projectRootPath)
 		if err != nil {
-			fmt.Printf("err 2: %v, \n", err)
 			return "", err
 		}
 
