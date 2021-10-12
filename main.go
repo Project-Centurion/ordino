@@ -13,8 +13,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-//@todo(athenais): add ./... arg (recusive) (flagArgs?)
-
 const (
 	projectNameArg = "project-name"
 	filePathArg    = "file-path"
