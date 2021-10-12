@@ -80,9 +80,6 @@ func parseImports(f *ast.File) map[string]*commentsMetadata {
 		switch decl.(type) {
 		case *ast.GenDecl:
 			dd := decl.(*ast.GenDecl)
-			if isSingleGoImport(dd) {
-				continue
-			}
 			if dd.Tok == token.IMPORT {
 				for _, spec := range dd.Specs {
 					var importSpecStr string
@@ -284,9 +281,9 @@ func rebuildImports(
 	}
 
 	linesCounter := len(order[0])
-	for _, stdImport := range order[0] {
+	for _, firstImportGroup := range order[0] {
 		spec := &ast.ImportSpec{
-			Path: &ast.BasicLit{Value: importWithComment(stdImport, commentsMetadata), Kind: tok},
+			Path: &ast.BasicLit{Value: importWithComment(firstImportGroup, commentsMetadata), Kind: tok},
 		}
 		specs = append(specs, spec)
 
@@ -300,9 +297,9 @@ func rebuildImports(
 	}
 
 	linesCounter = len(order[1])
-	for _, projectLocalPkg := range order[1] {
+	for _, secondImportGroup := range order[1] {
 		spec := &ast.ImportSpec{
-			Path: &ast.BasicLit{Value: importWithComment(projectLocalPkg, commentsMetadata), Kind: tok},
+			Path: &ast.BasicLit{Value: importWithComment(secondImportGroup, commentsMetadata), Kind: tok},
 		}
 		specs = append(specs, spec)
 
@@ -316,9 +313,9 @@ func rebuildImports(
 	}
 
 	linesCounter = len(order[2])
-	for _, projectImport := range order[2] {
+	for _, thirdImportGroup := range order[2] {
 		spec := &ast.ImportSpec{
-			Path: &ast.BasicLit{Value: importWithComment(projectImport, commentsMetadata), Kind: tok},
+			Path: &ast.BasicLit{Value: importWithComment(thirdImportGroup, commentsMetadata), Kind: tok},
 		}
 		specs = append(specs, spec)
 
@@ -331,9 +328,9 @@ func rebuildImports(
 		}
 	}
 
-	for _, generalImport := range order[3] {
+	for _, fourthImportGroup := range order[3] {
 		spec := &ast.ImportSpec{
-			Path: &ast.BasicLit{Value: importWithComment(generalImport, commentsMetadata), Kind: tok},
+			Path: &ast.BasicLit{Value: importWithComment(fourthImportGroup, commentsMetadata), Kind: tok},
 		}
 		specs = append(specs, spec)
 	}

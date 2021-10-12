@@ -121,7 +121,6 @@ func RunCommandRecursive(projectName string, order []string) {
 	if err != nil {
 		log.Println(err)
 	}
-	fmt.Printf("hello\n")
 
 	err = filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
