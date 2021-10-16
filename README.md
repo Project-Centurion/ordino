@@ -1,6 +1,6 @@
 # Ordino
 
-This package sorts imports according to [inducula conventions](https://github.com/Project-Centurion/inducula/blob/master/CONVENTION.md)
+This package sorts Go imports in groups and in a default or user-defined order. 
 
 ## Shoulders
 
@@ -18,22 +18,41 @@ Install it by running:
 go install github.com/Project-Centurion/ordino@latest
 ```
 
- Classic run :
-
 ```shell
-ordino -project-name <YourProjectName> -file-path <PathToYourFile> -output <TheOutPutYouWant> -order <thePackagesOrderYouWant>
+ordino -project-name [YourProjectName] -output [TheOutPutYouWant] -order [thePackagesOrderYouWant] [file/path/to/your/gofile.go]
 ```
 
-* **PathToYourFile** : (*required*) path to the file you want to sort
-* **YourProjectName** : (*optional*) if not set will fetch project name from `go.mod`
-* **TheOutPutYouWant** : (*optional*) either `file` or `stdout`, by default `file` (will rewrite the file specified in `-file-path`).
-* **thePackagesOrderYouWant** : (*optional*) constructed like this `std,alias,project,general` by default, meaning the order you want between 
+### Required arguments
+
+* single file sorting
+
+> `file/path/to/your/gofile.go` : the path from the current directory to the file where you want your imports sorted.
+
+* recursive run
+
+> `./...` : sorts imports from all the `.go` files under the current directory
+
+example :
+
+```shell
+ordino -project-name [YourProjectName] ./...
+```
+
+### Optional arguments
+
+* `theOutPutYouWant` : either `file` or `stdout`, by default `file` (will rewrite the files sorted).
+* `thePackagesOrderYouWant` : constructed like this `std,alias,project,general` by default, meaning the order you want between
 the packages, separated by commas, no spaces. Aliased packages being separated are optional.
+* `YourProjectName` : the imports you want sorted as `project` imports. Please provide the path to those imports such as `github.com/MyGreatProject`
+or `github.com/MyGreatProject/mySuperGreatGoRepository`. If not set, the project name will be fetched from `go.mod`
 
 
-Recursive run :
+### Real life examples: 
 
 ```shell
-ordino ./...
+ordino -order std,project,general -project-name github.com/Project-Centurion/ordino ./...
 ```
 
+```shell
+ordino -order project,general,std -output stdout main.go
+```

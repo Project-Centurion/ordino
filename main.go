@@ -13,6 +13,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+//@todo : add a 5th optional package with a specified path
+
 const (
 	projectNameArg = "project-name"
 	filePathArg    = "file-path"
@@ -24,17 +26,12 @@ const (
 	ColorGreen     = "\033[32m"
 	ColorRed       = "\033[31m"
 	ColorReset     = "\033[0m"
+	FilePathUsage  = `either provide "filepath/to/directory" or "./..." to sort recursively`
 )
 
-var projectName, filePath, output, order string
+var projectName, output, order string
 
 func init() {
-	flag.StringVar(
-		&filePath,
-		filePathArg,
-		"",
-		"File path to fix imports(ex.: ./dummypkg/dummyfile.go). Required parameter.",
-	)
 
 	flag.StringVar(
 		&projectName,
@@ -54,7 +51,7 @@ func init() {
 		&order,
 		orderArg,
 		"std,alias,project,general",
-		`Default is "std, alias, project, general". Imports can be sorted in whichever order between those for. Optional paramater.`,
+		`Default is "std, alias, project, general". Imports can be sorted in whichever order between those four, "alias" is optional. Optional paramater.`,
 	)
 
 }
@@ -65,32 +62,40 @@ func printUsage() {
 	}
 
 	flag.PrintDefaults()
+	fmt.Printf("unamed arg : %s", FilePathUsage)
 }
 
 func main() {
 	flag.Parse()
 
-	var isRecursive bool
-	if len(flag.Args()) > 0 {
-		if flag.Args()[0] == RecursiveArg {
-			isRecursive = true
-		}
+	args := flag.Args()
+	if len(args) == 0 {
+		fmt.Println(colorError(fmt.Sprintf("No file provided : %s", FilePathUsage)))
+		os.Exit(1)
 	}
 
-	if filePath == "" && isRecursive {
+	if len(args) > 1 {
+		fmt.Println(colorError(fmt.Sprintf(`Too much unflagged arguments defined: %s`, FilePathUsage)))
+		os.Exit(1)
+	}
+
+	filePath := args[0]
+
+	var isRecursive bool
+
+	if flag.Args()[0] == RecursiveArg {
+		isRecursive = true
 		path, err := os.Getwd()
 		if err != nil {
 			fmt.Println(err)
 		}
 
 		filePath = path
-
 	}
 
 	if !isRecursive {
-		if err := validateRequiredParam(filePath); err != nil {
+		if err := validateSinglePathParam(filePath); err != nil {
 			fmt.Println(colorError(err.Error()))
-			printUsage()
 			os.Exit(1)
 		}
 	}
@@ -181,9 +186,17 @@ func RunCommand(projectName, filePath string, orderSplitted []string) {
 
 }
 
-func validateRequiredParam(filePath string) error {
+func validateSinglePathParam(filePath string) error {
 	if filePath == "" {
 		return errors.Errorf("-%s should be set", filePathArg)
+	}
+
+	if _, err := os.Stat(filePath); err != nil {
+		return err
+	}
+
+	if filepath.Ext(filePath) != ".go" {
+		return errors.Errorf("%s is not a go file", filePath)
 	}
 
 	return nil
