@@ -1,0 +1,45 @@
+#!/bin/bash
+
+STAGED_GO_FILES=$(git diff --cached --name-only -- '*.go')
+PASS=true
+
+echo "Running pre-commit hook."
+
+if [[ $STAGED_GO_FILES == "" ]]; then
+    echo "No Go files modified, not running the linter"
+else
+    for file in $STAGED_GO_FILES; do
+        echo "$file has been modified. Running go fmt on it and adding the formatted version to the commit"
+        go fmt "$file" > /dev/null 2>&1
+        git add "$file"
+    done
+
+    echo "Tidying mods"
+    go mod tidy
+    git add go.mod
+    git add go.sum
+
+    echo "Running golangci-lint"
+    golangci-lint --issues-exit-code 1 run "$file"
+    if [[ $? == 1 ]]; then
+        PASS=false
+    fi
+
+    echo "Running staticcheck"
+    staticcheck ./...
+fi
+
+echo "-----------------"
+echo "-----------------"
+
+if ! $PASS; then
+  echo "Commit failed"
+  echo "-----------------"
+  echo "-----------------"
+  exit 1
+else
+  echo "Commit succeeded"
+  echo "-----------------"
+  echo "-----------------"
+  exit 0
+fi

@@ -1,0 +1,47 @@
+name: Lint & Build - GoLang
+on: [push]
+jobs:
+  backend:
+    name: BackEnd
+    runs-on: ubuntu-latest
+    env:
+      GO111MODULE: on
+    steps:
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
+
+      - id: go-cache-paths
+        run: |
+          echo "::set-output name=go-mod::$(go env GOMODCACHE)"
+
+      - name: Go Mod Cache
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.go-cache-paths.outputs.go-mod }}
+          key: ${{ runner.os }}-go-mod-${{ hashFiles('**/go.sum') }}
+
+      - name: Set up Go 1.17
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.17
+        id: go
+
+      - name: Get dependencies for code generation and analysis
+        run: |
+          go install github.com/gobuffalo/packr/v2/packr2@v2.8.1
+          go install github.com/golang/mock/mockgen@v1.6.0
+          go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.42.1
+          go install github.com/securego/gosec/cmd/gosec@latest
+          go install honnef.co/go/tools/cmd/staticcheck@latest
+
+      - name: Lint code with go fmt
+        run: diff -u <(echo -n) <(gofmt -d ./)
+        
+      - name: Run golangci-lint
+        run: golangci-lint run ./...
+
+      - name: Get dependencies
+        run: go mod download
+        
+      - name: Build
+        run: GOOS=linux go build -ldflags="-s -w" -o bin/ordino .
