@@ -1,0 +1,37 @@
+project_name: ordino
+
+env:
+  - GO111MODULE=on
+
+before:
+  hooks:
+    - go mod download
+
+builds:
+  - binary: ordino
+    goos:
+      - darwin
+      - windows
+      - linux
+    goarch:
+      - amd64
+      - 386
+    ignore:
+      - goos: darwin
+        goarch: 386
+    env:
+      - CGO_ENABLED=0
+    ldflags:
+      - -s -w
+archives:
+  - format: tar.gz
+    wrap_in_directory: true
+    files:
+      - README.md
+    replacements:
+      386: i386
+      amd64: x86_64
+checksum:
+  name_template: 'checksums.txt'
+snapshot:
+  name_template: "{{ .Tag }}"

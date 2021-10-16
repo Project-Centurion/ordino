@@ -9,6 +9,7 @@ import (
 	"go/printer"
 	"go/token"
 	"io/ioutil"
+	"path/filepath"
 	"sort"
 	"strings"
 
@@ -23,7 +24,7 @@ const (
 )
 
 func Execute(projectName, filePath string, order []string) ([]byte, bool, error) {
-	originalContent, err := ioutil.ReadFile(filePath)
+	originalContent, err := ioutil.ReadFile(filepath.Clean(filePath))
 	if err != nil {
 		return nil, false, err
 	}

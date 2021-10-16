@@ -179,7 +179,7 @@ func RunCommand(projectName, filePath string, orderSplitted []string) {
 
 		fmt.Println(colorWorked(fmt.Sprintf("	imports sorted: %v", filePath)))
 
-		if err := ioutil.WriteFile(filePath, formattedOutput, 0644); err != nil {
+		if err := ioutil.WriteFile(filePath, formattedOutput, 0600); err != nil {
 			log.Fatalf(colorError(fmt.Sprintf("failed to write fixed result to file(%s): %+v", filePath, errors.WithStack(err))))
 		}
 	}
