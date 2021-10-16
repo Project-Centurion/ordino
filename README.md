@@ -9,8 +9,8 @@ This customized package uses a lot of the logic and some tools from [goimports-r
 ## Requirements
 
 * Go 1.17;
-* [GolangCI-Lint CMD][4];
-* [Staticcheck CMD][15];
+* [GolangCI-Lint CMD][https://github.com/golangci/golangci-lint];
+* [Staticcheck CMD][https://staticcheck.io];
 
 ## Usage
 
