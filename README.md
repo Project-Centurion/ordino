@@ -9,8 +9,8 @@ This customized package uses a lot of the logic and some tools from [goimports-r
 ## Requirements
 
 * Go 1.17;
-* [GolangCI-Lint CMD][https://github.com/golangci/golangci-lint];
-* [Staticcheck CMD][https://staticcheck.io];
+* [GolangCI-Lint CMD](https://github.com/golangci/golangci-lint);
+* [Staticcheck CMD](https://staticcheck.io);
 
 ## Usage
 
@@ -23,6 +23,10 @@ go install github.com/Project-Centurion/ordino@latest
 ```shell
 ordino -project-name [YourProjectName] -output [TheOutPutYouWant] -order [thePackagesOrderYouWant] [file/path/to/your/gofile.go]
 ```
+
+### Warning
+
+:warning: For now, any comment living on top of an import (doc) and not on it side (comment) will be deleted by sort
 
 ### Required arguments
 
