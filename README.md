@@ -9,8 +9,8 @@ This customized package uses a lot of the logic and some tools from [goimports-r
 ## Requirements
 
 * Go 1.17;
-* [GolangCI-Lint CMD][https://github.com/golangci/golangci-lint];
-* [Staticcheck CMD][https://staticcheck.io];
+* [GolangCI-Lint CMD](https://github.com/golangci/golangci-lint);
+* [Staticcheck CMD](https://staticcheck.io);
 
 ## Usage
 
@@ -22,6 +22,32 @@ go install github.com/Project-Centurion/ordino@latest
 
 ```shell
 ordino -project-name [YourProjectName] -output [TheOutPutYouWant] -order [thePackagesOrderYouWant] [file/path/to/your/gofile.go]
+```
+
+### Warnings
+
+:warning: On actual stable version of ordino, any comment on top of an import (doc) will be removed by `ordino`,
+any comment at the end of an import (comment) will stay.
+
+On next versions of `ordino`, this should be fixed. Do not hesitate to raise a PR to propose a fix.
+
+Example of comment which will be remove:
+```go
+import (
+	"bytes"
+	"fmt"
+	"go/ast" //this a comment that will stay
+	"go/format"
+	"go/parser"
+	"go/printer"
+	"go/token"
+	"io/ioutil"
+	"path/filepath"
+	"sort"
+	"strings"
+	// This is a comment that will be removed
+	"github.com/incu6us/goimports-reviser/v2/pkg/std"
+)
 ```
 
 ### Required arguments
