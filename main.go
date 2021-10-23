@@ -3,17 +3,15 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
-	"path/filepath"
 	"strings"
 
-	"github.com/incu6us/goimports-reviser/v2/pkg/module"
-	"github.com/pkg/errors"
+	"github.com/Project-Centurion/ordino/sorter"
 )
 
 //@todo : add a 5th optional package with a specified path
+//@todo : add a yml config file
 
 const (
 	projectNameArg = "project-name"
@@ -26,13 +24,12 @@ const (
 	ColorGreen     = "\033[32m"
 	ColorRed       = "\033[31m"
 	ColorReset     = "\033[0m"
-	FilePathUsage  = `either provide "filepath/to/directory" or "./..." to sort recursively`
+	FilePathUsage  = `either provide "filepath/to/directory" or "./..." as an unnamed arg to sort recursively`
 )
 
 var projectName, output, order string
 
 func init() {
-
 	flag.StringVar(
 		&projectName,
 		projectNameArg,
@@ -62,7 +59,7 @@ func printUsage() {
 	}
 
 	flag.PrintDefaults()
-	fmt.Printf("unamed arg : %s", FilePathUsage)
+	fmt.Printf("file-path : %s", FilePathUsage)
 }
 
 func main() {
@@ -102,6 +99,7 @@ func main() {
 
 	if err := validateOutputParam(output); err != nil {
 		fmt.Println(colorError(err.Error()))
+		printUsage()
 		os.Exit(1)
 	}
 
@@ -115,120 +113,22 @@ func main() {
 	orderSplitted := strings.Split(order, ",")
 
 	if len(orderSplitted) < 3 {
-		fmt.Println(colorError("exited: not enough arguments for flag order"))
-		os.Exit(1)
+		printError("exited: not enough arguments for flag order")
 	}
 
 	for _, order := range orderSplitted {
-		if (order != stdPkg) && (order != aliasedPkg) && (order != projectPkg) && (order != generalPkg) {
-			fmt.Println(colorError(fmt.Sprintf("exited: order flag must either be %s, %s, %s, or %s", stdPkg, aliasedPkg, projectPkg, generalPkg)))
+		if (order != sorter.StdPkg) && (order != sorter.AliasedPkg) && (order != sorter.ProjectPkg) && (order != sorter.GeneralPkg) {
+			fmt.Println(colorError(fmt.Sprintf("exited: order flag must either be %s, %s, %s, or %s", sorter.StdPkg, sorter.AliasedPkg, sorter.ProjectPkg, sorter.GeneralPkg)))
 			os.Exit(1)
 		}
 	}
 
 	if isRecursive {
 		output = defaultOutput
-		RunCommandRecursive(projectName, filePath, orderSplitted)
+		runCommandRecursive(projectName, filePath, orderSplitted)
 		os.Exit(0)
 	}
 
-	RunCommand(projectName, filePath, orderSplitted)
+	runCommand(projectName, filePath, orderSplitted)
 	os.Exit(0)
-}
-
-func colorError(error string) string {
-	return fmt.Sprintf("%s%s%s", ColorRed, error, ColorReset)
-}
-
-func colorWorked(success string) string {
-	return fmt.Sprintf("%s%s%s", ColorGreen, success, ColorReset)
-}
-
-func RunCommandRecursive(projectName, path string, order []string) {
-
-	err := filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			fmt.Println(colorError(err.Error()))
-			return err
-		}
-
-		if !info.IsDir() && filepath.Ext(path) == ".go" {
-			RunCommand(projectName, path, order)
-		}
-
-		return nil
-	})
-	if err != nil {
-		fmt.Println(err)
-	}
-}
-
-func RunCommand(projectName, filePath string, orderSplitted []string) {
-
-	formattedOutput, hasChange, err := Execute(projectName, filePath, orderSplitted)
-	if err != nil {
-		log.Fatalf(colorError(fmt.Sprintf("%+v", errors.WithStack(err))))
-	}
-
-	if output == StdOutput {
-		fmt.Print(string(formattedOutput))
-	} else if output == defaultOutput {
-		if !hasChange {
-			return
-		}
-
-		fmt.Println(colorWorked(fmt.Sprintf("	imports sorted: %v", filePath)))
-
-		if err := ioutil.WriteFile(filePath, formattedOutput, 0600); err != nil {
-			log.Fatalf(colorError(fmt.Sprintf("failed to write fixed result to file(%s): %+v", filePath, errors.WithStack(err))))
-		}
-	}
-
-}
-
-func validateSinglePathParam(filePath string) error {
-	if filePath == "" {
-		return errors.Errorf("-%s should be set", filePathArg)
-	}
-
-	if _, err := os.Stat(filePath); err != nil {
-		return err
-	}
-
-	if filepath.Ext(filePath) != ".go" {
-		return errors.Errorf("%s is not a go file", filePath)
-	}
-
-	return nil
-}
-
-func validateOutputParam(output string) error {
-	if output == "" {
-		return nil
-	}
-	if output != StdOutput && output != defaultOutput {
-		return errors.Errorf(`output does not have to be set but can either be "%s" or "%s". Default : "%s"`, defaultOutput, StdOutput, defaultOutput)
-	}
-
-	return nil
-}
-
-func determineProjectName(projectName, filePath string) (string, error) {
-	if projectName == "" {
-
-		projectRootPath, err := module.GoModRootPath(filePath)
-		if err != nil {
-			return "", err
-		}
-
-		moduleName, err := module.Name(projectRootPath)
-		if err != nil {
-			return "", err
-		}
-
-		return moduleName, nil
-	}
-
-	return projectName, nil
-
 }
