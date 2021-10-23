@@ -1,8 +1,7 @@
-package main
+package sorter
 
 import (
 	"bytes"
-	"fmt"
 	"go/ast"
 	"go/format"
 	"go/parser"
@@ -17,10 +16,10 @@ import (
 )
 
 const (
-	stdPkg     = "std"
-	aliasedPkg = "alias"
-	generalPkg = "general"
-	projectPkg = "project"
+	StdPkg     = "std"
+	AliasedPkg = "alias"
+	GeneralPkg = "general"
+	ProjectPkg = "project"
 )
 
 func Execute(projectName, filePath string, order []string) ([]byte, bool, error) {
@@ -157,21 +156,6 @@ func groupImports(
 	return stdImports, generalImports, importsWithAlias, projectImports
 }
 
-func skipPackageAlias(pkg string) string {
-	values := strings.Split(pkg, " ")
-	if len(values) > 1 {
-		return strings.Trim(values[1], `"`)
-	}
-
-	return strings.Trim(pkg, `"`)
-}
-
-func isPackageWithAlias(pkg string) bool {
-	values := strings.Split(pkg, " ")
-
-	return len(values) > 1
-}
-
 // hasMultipleImportDecls will return combined import declarations to single declaration
 //
 // Ex.:
@@ -254,128 +238,6 @@ func fixImports(
 
 	clearImportDocs(f, importsPositions)
 	removeEmptyImportNode(f)
-}
-
-func rebuildImports(
-	tok token.Token,
-	commentsMetadata map[string]*commentsMetadata,
-	stdImports []string,
-	generalImports []string,
-	aliasedImports []string,
-	projectImports []string,
-	flagOrders []string,
-) []ast.Spec {
-	var specs []ast.Spec
-
-	order := map[int][]string{}
-	for i, flagOrder := range flagOrders {
-		switch flagOrder {
-		case stdPkg:
-			order[i] = stdImports
-		case aliasedPkg:
-			order[i] = aliasedImports
-		case projectPkg:
-			order[i] = projectImports
-		case generalPkg:
-			order[i] = generalImports
-		}
-	}
-
-	linesCounter := len(order[0])
-	for _, firstImportGroup := range order[0] {
-		spec := &ast.ImportSpec{
-			Path: &ast.BasicLit{Value: importWithComment(firstImportGroup, commentsMetadata), Kind: tok},
-		}
-		specs = append(specs, spec)
-
-		linesCounter--
-
-		if linesCounter == 0 && (len(order[1]) > 0 || len(order[2]) > 0 || len(order[3]) > 0) {
-			spec = &ast.ImportSpec{Path: &ast.BasicLit{Value: "", Kind: token.STRING}}
-
-			specs = append(specs, spec)
-		}
-	}
-
-	linesCounter = len(order[1])
-	for _, secondImportGroup := range order[1] {
-		spec := &ast.ImportSpec{
-			Path: &ast.BasicLit{Value: importWithComment(secondImportGroup, commentsMetadata), Kind: tok},
-		}
-		specs = append(specs, spec)
-
-		linesCounter--
-
-		if linesCounter == 0 && (len(order[2]) > 0 || len(order[3]) > 0) {
-			spec = &ast.ImportSpec{Path: &ast.BasicLit{Value: "", Kind: token.STRING}}
-
-			specs = append(specs, spec)
-		}
-	}
-
-	linesCounter = len(order[2])
-	for _, thirdImportGroup := range order[2] {
-		spec := &ast.ImportSpec{
-			Path: &ast.BasicLit{Value: importWithComment(thirdImportGroup, commentsMetadata), Kind: tok},
-		}
-		specs = append(specs, spec)
-
-		linesCounter--
-
-		if linesCounter == 0 && len(order[3]) > 0 {
-			spec = &ast.ImportSpec{Path: &ast.BasicLit{Value: "", Kind: token.STRING}}
-
-			specs = append(specs, spec)
-		}
-	}
-
-	for _, fourthImportGroup := range order[3] {
-		spec := &ast.ImportSpec{
-			Path: &ast.BasicLit{Value: importWithComment(fourthImportGroup, commentsMetadata), Kind: tok},
-		}
-		specs = append(specs, spec)
-	}
-
-	return specs
-}
-
-type commentsMetadata struct {
-	Doc     *ast.CommentGroup
-	Comment *ast.CommentGroup
-}
-
-type importPosition struct {
-	Start token.Pos
-	End   token.Pos
-}
-
-func (p *importPosition) IsInRange(comment *ast.CommentGroup) bool {
-	if p.Start <= comment.Pos() && comment.Pos() <= p.End {
-		return true
-	}
-
-	return false
-}
-
-func importWithComment(imprt string, commentsMetadata map[string]*commentsMetadata) string {
-	var comment string
-	commentGroup, ok := commentsMetadata[imprt]
-	if ok {
-		if commentGroup != nil && commentGroup.Comment != nil && len(commentGroup.Comment.List) > 0 {
-			comment = fmt.Sprintf("// %s", strings.ReplaceAll(commentGroup.Comment.Text(), "\n", ""))
-		}
-	}
-
-	return fmt.Sprintf("%s %s", imprt, comment)
-}
-
-func OrderContainsAlias(order []string) bool {
-	for _, o := range order {
-		if o == aliasedPkg {
-			return true
-		}
-	}
-	return false
 }
 
 func clearImportDocs(f *ast.File, importsPositions []*importPosition) {

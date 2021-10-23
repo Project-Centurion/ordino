@@ -1,5 +1,9 @@
 # Ordino
 
+![CI Status][1]
+![License MIT][2]
+![Release][3]
+
 This package sorts Go imports in groups and in a default or user-defined order. 
 
 ## Shoulders
@@ -9,8 +13,8 @@ This customized package uses a lot of the logic and some tools from [goimports-r
 ## Requirements
 
 * Go 1.17;
-* [GolangCI-Lint CMD](https://github.com/golangci/golangci-lint);
-* [Staticcheck CMD](https://staticcheck.io);
+* [GolangCI-Lint CMD][4](https://github.com/golangci/golangci-lint);
+* [Staticcheck CMD][5](https://staticcheck.io);
 
 ## Usage
 
@@ -50,6 +54,8 @@ import (
 )
 ```
 
+:warning: :bug: when two import declarations are set, they will not be squashed together. Working on a fix
+
 ### Required arguments
 
 * single file sorting
@@ -84,3 +90,12 @@ ordino -order std,project,general -project-name github.com/Project-Centurion/ord
 ```shell
 ordino -order project,general,std -output stdout main.go
 ```
+
+### Future projects
+
+- Add a 5th option to sort specific patterns
+- Add a way to configure sorting through a `.yml` config file
+
+[1] https://github.com/Project-Centurion/ordino/workflows/Lint%20&%20Build%20-%20GoLang/badge.svg
+[2] https://img.shields.io/github/license/Project-Centurion/ordino
+[3] https://img.shields.io/github/v/release/Project-Centurion/ordino
