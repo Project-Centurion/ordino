@@ -3,7 +3,7 @@ module github.com/Project-Centurion/ordino
 go 1.17
 
 require (
-	github.com/incu6us/goimports-reviser/v2 v2.4.5
+	github.com/incu6us/goimports-reviser/v2 v2.4.6
 	github.com/pkg/errors v0.9.1
 )
 
