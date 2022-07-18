@@ -1,7 +1,7 @@
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/incu6us/goimports-reviser/v2 v2.5.1 h1:y69xfoxFQ+kgvKgYO9JEBl/Z9KE85J36MHkH1MXLcJQ=
-github.com/incu6us/goimports-reviser/v2 v2.5.1/go.mod h1:JnylV6rwmo3ORG/XTBOcMG+MBayR6Eo2XwtdXhpGLZo=
+github.com/incu6us/goimports-reviser/v2 v2.5.3 h1:DzvFl1+qOIDukqN8vMM/10MQswFQywUdwXxsjuowxlc=
+github.com/incu6us/goimports-reviser/v2 v2.5.3/go.mod h1:P18aXhQaED7izHIP9IPI9PqEs7Y7D9okq71Q8Y8yHN4=
 github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORNo=
 github.com/kr/pty v1.1.1/go.mod h1:pFQYn66WHrOpPYNljwOMqo10TkYh1fy3cYio2l3bCsQ=
 github.com/kr/text v0.1.0/go.mod h1:4Jbv+DJW3UT/LiOwJeYQe1efqtUx/iVham/4vfdArNI=
